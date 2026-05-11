@@ -11,10 +11,11 @@ const DB_NAME = 'ratvault-pwa';
 
 function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
+    const req = indexedDB.open(DB_NAME, 2);
     req.onupgradeneeded = e => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+      if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
     };
     req.onsuccess = e => resolve(e.target.result);
     req.onerror = e => reject(e.target.error);
@@ -34,6 +35,24 @@ async function dbSet(key, value) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const req = db.transaction('kv', 'readwrite').objectStore('kv').put(value, key);
+    req.onsuccess = () => resolve();
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+async function dbGetFile(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const req = db.transaction('files', 'readonly').objectStore('files').get(key);
+    req.onsuccess = () => resolve(req.result ?? null);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+async function dbSetFile(key, value) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const req = db.transaction('files', 'readwrite').objectStore('files').put(value, key);
     req.onsuccess = () => resolve();
     req.onerror = e => reject(e.target.error);
   });
@@ -200,6 +219,52 @@ async function listEntries() {
 async function writeEntry(filename, meta, body) {
   if (HAS_FS_API && dirHandle) return writeEntryFS(filename, meta, body);
   return writeEntryIDB(filename, meta, body);
+}
+
+// ─── Binary file handling ─────────────────────────────────────────────────────
+
+function detectKind(filename, mimeType) {
+  const ext = (filename.split('.').pop() || '').toLowerCase();
+  if (/^image\//.test(mimeType) || ['jpg','jpeg','png','gif','webp','svg','bmp','avif'].includes(ext)) return 'image';
+  if (mimeType === 'application/pdf' || ext === 'pdf') return 'pdf';
+  if (/^video\//.test(mimeType) || ['mp4','webm','mov','mkv'].includes(ext)) return 'video';
+  if (/^audio\//.test(mimeType) || ['mp3','wav','ogg','flac','m4a'].includes(ext)) return 'audio';
+  if (['doc','docx','xls','xlsx','ppt','pptx'].includes(ext)) return 'document';
+  if (['txt','csv','json'].includes(ext)) return 'text';
+  return 'file';
+}
+
+async function writeFileToVault(file) {
+  const kind = detectKind(file.name, file.type);
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+  const titleBase = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+  const title = titleBase || file.name;
+  const slug = slugify(title) || slugify(file.name) || 'untitled';
+  const mdFilename = `${ts}-${slug}.md`;
+
+  if (HAS_FS_API && dirHandle) {
+    const h = await dirHandle.getFileHandle(file.name, { create: true });
+    const w = await h.createWritable();
+    await w.write(await file.arrayBuffer());
+    await w.close();
+  } else {
+    const buf = await file.arrayBuffer();
+    await dbSetFile(file.name, { data: buf, type: file.type || 'application/octet-stream', name: file.name });
+  }
+
+  await writeEntry(mdFilename, {
+    title,
+    source_file: file.name,
+    file_type: file.type || '',
+    kind,
+    tags: [kind, 'vault'],
+    created: now.toISOString(),
+    slug,
+  }, `# ${title}\n\n`);
+
+  return { title, kind, filename: mdFilename };
 }
 
 // ─── Search ───────────────────────────────────────────────────────────────────
@@ -523,10 +588,11 @@ function openEntry(entry) {
 
   body.appendChild(el('div', 'entry-title', entry.title));
 
-  if (entry.tags.length) {
+  const tags = entry.tags.length ? entry.tags : [];
+  if (tags.length) {
     const meta = el('div', 'doc-meta');
     meta.style.marginBottom = '8px';
-    entry.tags.forEach(t => meta.appendChild(el('span', 'badge', t)));
+    tags.forEach(t => meta.appendChild(el('span', 'badge', t)));
     body.appendChild(meta);
   }
 
@@ -537,10 +603,74 @@ function openEntry(entry) {
     body.appendChild(src);
   }
 
-  const content = el('div', 'entry-content md-body');
-  const raw = entry.body || entry.summary || '';
-  content.appendChild(raw ? renderMarkdown(raw) : document.createTextNode('(empty)'));
-  body.appendChild(content);
+  const kind = entry.meta?.kind || '';
+  const sourceFile = entry.meta?.source_file;
+  const binaryKinds = ['image', 'pdf', 'video', 'audio'];
+
+  if (sourceFile && binaryKinds.includes(kind)) {
+    renderBinaryPreview(body, entry, kind, sourceFile);
+  } else {
+    const content = el('div', 'entry-content md-body');
+    const raw = entry.body || entry.summary || '';
+    content.appendChild(raw ? renderMarkdown(raw) : document.createTextNode('(empty)'));
+    body.appendChild(content);
+  }
+}
+
+async function renderBinaryPreview(container, entry, kind, sourceFile) {
+  let objectUrl = null;
+  try {
+    if (HAS_FS_API && dirHandle) {
+      const fh = await dirHandle.getFileHandle(sourceFile);
+      objectUrl = URL.createObjectURL(await fh.getFile());
+    } else {
+      const stored = await dbGetFile(sourceFile);
+      if (stored) {
+        objectUrl = URL.createObjectURL(new Blob([stored.data], { type: stored.type }));
+      }
+    }
+  } catch (_) {}
+
+  if (!objectUrl) {
+    container.appendChild(el('div', 'preview-missing', `File "${sourceFile}" not found in vault.`));
+    return;
+  }
+
+  if (kind === 'image') {
+    const img = document.createElement('img');
+    img.src = objectUrl;
+    img.className = 'preview-img';
+    img.alt = entry.title;
+    container.appendChild(img);
+  } else if (kind === 'pdf') {
+    const embed = document.createElement('embed');
+    embed.src = objectUrl;
+    embed.type = 'application/pdf';
+    embed.className = 'preview-pdf';
+    container.appendChild(embed);
+  } else if (kind === 'video') {
+    const video = document.createElement('video');
+    video.src = objectUrl;
+    video.controls = true;
+    video.className = 'preview-video';
+    container.appendChild(video);
+  } else if (kind === 'audio') {
+    const audio = document.createElement('audio');
+    audio.src = objectUrl;
+    audio.controls = true;
+    audio.className = 'preview-audio';
+    container.appendChild(audio);
+  }
+
+  // Show any extra markdown notes below the preview
+  const bodyText = (entry.body || '').trim();
+  const headingOnly = bodyText === `# ${entry.title}` || bodyText === '';
+  if (!headingOnly) {
+    const content = el('div', 'entry-content md-body');
+    content.style.marginTop = '12px';
+    content.appendChild(renderMarkdown(bodyText));
+    container.appendChild(content);
+  }
 }
 
 // ─── Settings view ────────────────────────────────────────────────────────────
@@ -803,25 +933,34 @@ async function init() {
   $('vault-upload').addEventListener('click', () => $('file-input').click());
   $('file-input').addEventListener('change', async e => {
     const files = Array.from(e.target.files);
-    if (HAS_FS_API && dirHandle) {
-      for (const file of files) {
-        try {
-          const h = await dirHandle.getFileHandle(file.name, { create: true });
-          const w = await h.createWritable();
-          await w.write(await file.arrayBuffer());
-          await w.close();
-        } catch (err) { toast('Upload failed: ' + err.message); }
-      }
-      await loadVault();
-      toast(`Uploaded ${files.length} file(s)`);
-    } else {
-      const mdFiles = files.filter(f => f.name.endsWith('.md'));
-      if (mdFiles.length) {
+    if (!files.length) return;
+    const mdFiles = files.filter(f => f.name.endsWith('.md'));
+    const binFiles = files.filter(f => !f.name.endsWith('.md'));
+    let count = 0;
+    if (mdFiles.length) {
+      if (HAS_FS_API && dirHandle) {
+        for (const file of mdFiles) {
+          try {
+            const h = await dirHandle.getFileHandle(file.name, { create: true });
+            const w = await h.createWritable();
+            await w.write(await file.arrayBuffer());
+            await w.close();
+            count++;
+          } catch (err) { toast('Upload failed: ' + err.message); }
+        }
+      } else {
         await loadFromFileList(mdFiles);
-        await loadVault();
-        toast(`Imported ${mdFiles.length} file(s)`);
+        count += mdFiles.length;
       }
     }
+    for (const file of binFiles) {
+      try {
+        await writeFileToVault(file);
+        count++;
+      } catch (err) { toast('Upload failed: ' + err.message); }
+    }
+    await loadVault();
+    if (count) toast(`Uploaded ${count} file(s)`);
     e.target.value = '';
   });
 
