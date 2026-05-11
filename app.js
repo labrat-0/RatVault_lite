@@ -274,8 +274,22 @@ function detectKind(filename, mimeType) {
   return 'file';
 }
 
+const MIME_FALLBACK = {
+  mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', mkv: 'video/x-matroska',
+  mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', flac: 'audio/flac', m4a: 'audio/mp4',
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif',
+  webp: 'image/webp', svg: 'image/svg+xml', pdf: 'application/pdf',
+};
+
+function resolveFileMime(file) {
+  if (file.type && file.type !== 'application/octet-stream') return file.type;
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  return MIME_FALLBACK[ext] || 'application/octet-stream';
+}
+
 async function writeFileToVault(file, titleOverride) {
-  const kind = detectKind(file.name, file.type);
+  const mimeType = resolveFileMime(file);
+  const kind = detectKind(file.name, mimeType);
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
   const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
@@ -291,13 +305,13 @@ async function writeFileToVault(file, titleOverride) {
     await w.close();
   } else {
     const buf = await file.arrayBuffer();
-    await dbSetFile(file.name, { data: buf, type: file.type || 'application/octet-stream', name: file.name });
+    await dbSetFile(file.name, { data: buf, type: mimeType, name: file.name });
   }
 
   await writeEntry(mdFilename, {
     title,
     source_file: file.name,
-    file_type: file.type || '',
+    file_type: mimeType,
     kind,
     tags: [kind, 'vault'],
     created: now.toISOString(),
@@ -667,7 +681,10 @@ function openEntry(entry) {
   const body = $('entry-body');
   clearChildren(body);
 
-  body.appendChild(el('div', 'entry-title', entry.title));
+  const titleEl = el('div', 'entry-title editable-title', entry.title);
+  titleEl.title = 'Click to rename';
+  titleEl.addEventListener('click', () => openEditor(entry));
+  body.appendChild(titleEl);
 
   const tags = entry.tags.length ? entry.tags : [];
   if (tags.length) {
@@ -700,12 +717,13 @@ function openEntry(entry) {
 
 async function renderBinaryPreview(container, entry, kind, sourceFile) {
   let objectUrl = null;
+  let stored = null;
   try {
     if (HAS_FS_API && dirHandle) {
       const fh = await dirHandle.getFileHandle(sourceFile);
       objectUrl = URL.createObjectURL(await fh.getFile());
     } else {
-      const stored = await dbGetFile(sourceFile);
+      stored = await dbGetFile(sourceFile);
       if (stored) {
         objectUrl = URL.createObjectURL(new Blob([stored.data], { type: stored.type }));
       }
@@ -729,15 +747,26 @@ async function renderBinaryPreview(container, entry, kind, sourceFile) {
     container.appendChild(btn);
   } else if (kind === 'video') {
     const video = document.createElement('video');
-    video.src = objectUrl;
     video.controls = true;
+    video.playsInline = true;
+    video.preload = 'metadata';
     video.className = 'preview-video';
+    const vsrc = document.createElement('source');
+    vsrc.src = objectUrl;
+    const vtype = stored?.type || entry.meta?.file_type || '';
+    if (vtype) vsrc.type = vtype;
+    video.appendChild(vsrc);
     container.appendChild(video);
   } else if (kind === 'audio') {
     const audio = document.createElement('audio');
-    audio.src = objectUrl;
     audio.controls = true;
+    audio.preload = 'metadata';
     audio.className = 'preview-audio';
+    const asrc = document.createElement('source');
+    asrc.src = objectUrl;
+    const atype = stored?.type || entry.meta?.file_type || '';
+    if (atype) asrc.type = atype;
+    audio.appendChild(asrc);
     container.appendChild(audio);
   }
 
