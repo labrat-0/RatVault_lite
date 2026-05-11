@@ -927,6 +927,8 @@ async function init() {
     });
   });
 
+  $('header-refresh').addEventListener('click', () => location.reload());
+
   // Restore session
   if (HAS_FS_API) {
     const handle = await loadDirHandle();
