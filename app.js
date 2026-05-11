@@ -5,6 +5,15 @@
 
 const HAS_FS_API = typeof window.showDirectoryPicker === 'function';
 
+const BINARY_EXTS = new Set([
+  'jpg','jpeg','png','gif','webp','svg','bmp','avif',
+  'pdf',
+  'mp4','webm','mov','mkv',
+  'mp3','wav','ogg','flac','m4a',
+  'doc','docx','xls','xlsx','ppt','pptx',
+  'txt','csv','json',
+]);
+
 // ─── IndexedDB store ────────────────────────────────────────────────────────
 
 const DB_NAME = 'ratvault-pwa';
@@ -123,13 +132,34 @@ async function pickDirectory() {
 
 async function listEntriesFS() {
   const out = [];
+  const binHandles = new Map();
+
   for await (const [name, handle] of dirHandle.entries()) {
-    if (handle.kind !== 'file' || !name.endsWith('.md')) continue;
+    if (handle.kind !== 'file') continue;
+    if (name.endsWith('.md')) {
+      try {
+        const raw = await (await handle.getFile()).text();
+        out.push(fileToEntry(name, raw));
+      } catch (_) {}
+    } else if (!name.startsWith('.') && name !== 'ratvault-pwa.json') {
+      const ext = (name.split('.').pop() || '').toLowerCase();
+      if (BINARY_EXTS.has(ext)) binHandles.set(name, handle);
+    }
+  }
+
+  // Auto-create .md wrappers for binary files not yet tracked
+  const tracked = new Set(out.map(e => e.meta?.source_file).filter(Boolean));
+  for (const [name, handle] of binHandles) {
+    if (tracked.has(name)) continue;
     try {
-      const raw = await (await handle.getFile()).text();
-      out.push(fileToEntry(name, raw));
+      const file = await handle.getFile();
+      const { filename } = await writeFileToVault(file);
+      const mdHandle = await dirHandle.getFileHandle(filename);
+      const raw = await (await mdHandle.getFile()).text();
+      out.push(fileToEntry(filename, raw));
     } catch (_) {}
   }
+
   return out.sort((a, b) => b.created.localeCompare(a.created));
 }
 
@@ -175,9 +205,10 @@ async function saveEntriesIDB(entries) {
 
 async function loadFromFileList(fileList) {
   const existing = await loadEntriesIDB();
-  const existingByName = Object.fromEntries(existing.map(e => [e.filename, e]));
   const out = [...existing];
+  const trackedSources = new Set(existing.map(e => e.meta?.source_file).filter(Boolean));
 
+  // Process .md files first
   for (const file of fileList) {
     if (!file.name.endsWith('.md')) continue;
     try {
@@ -189,7 +220,16 @@ async function loadFromFileList(fileList) {
   }
   out.sort((a, b) => b.created.localeCompare(a.created));
   await saveEntriesIDB(out);
-  return out;
+
+  // Process binary files (writeFileToVault handles IDB writes internally)
+  for (const file of fileList) {
+    if (file.name.endsWith('.md') || file.name.startsWith('.')) continue;
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!BINARY_EXTS.has(ext) || trackedSources.has(file.name)) continue;
+    try { await writeFileToVault(file); } catch (_) {}
+  }
+
+  return loadEntriesIDB();
 }
 
 async function writeEntryIDB(filename, meta, body) {
@@ -705,7 +745,7 @@ async function applyTheme(t) {
 
 // ─── Chat ────────────────────────────────────────────────────────────────────
 
-function appendMsg(role, text) {
+function appendMsg(role, text, sources = []) {
   const wrap = $('chat-msgs');
   const div = el('div', `msg ${role}`);
   div.appendChild(el('div', 'who', role === 'user' ? 'you' : role === 'error' ? 'error' : 'vault'));
@@ -716,6 +756,18 @@ function appendMsg(role, text) {
     body.textContent = text;
   }
   div.appendChild(body);
+
+  if (role === 'assistant' && sources.length) {
+    const srcRow = el('div', 'msg-sources');
+    srcRow.appendChild(el('span', 'sources-label', 'sources:'));
+    sources.forEach(e => {
+      const btn = el('button', 'btn sm source-chip', '↗ ' + e.title);
+      btn.addEventListener('click', () => openEntry(e));
+      srcRow.appendChild(btn);
+    });
+    div.appendChild(srcRow);
+  }
+
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
   return div;
@@ -795,10 +847,11 @@ async function doSendChat() {
   $('chat-send').disabled = true;
   appendMsg('user', text);
   const thinking = appendThinking();
+  const contextEntries = allEntries.slice(0, 8);
   try {
     const reply = await sendChatMessage(text, allEntries);
     thinking.remove();
-    appendMsg('assistant', reply);
+    appendMsg('assistant', reply, contextEntries);
   } catch (e) {
     thinking.remove();
     appendMsg('error', e.message);
