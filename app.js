@@ -562,11 +562,11 @@ function promptTitle(filename, defaultTitle) {
     const fnEl    = document.getElementById('rename-filename');
     fnEl.textContent = filename;
     input.value = defaultTitle;
-    overlay.style.display = 'flex';
+    overlay.classList.add('open');
     setTimeout(() => { input.focus(); input.select(); }, 60);
 
     function finish(val) {
-      overlay.style.display = 'none';
+      overlay.classList.remove('open');
       off();
       resolve(val || defaultTitle);
     }

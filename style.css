@@ -391,10 +391,12 @@ button.btn.sm { padding: 4px 8px; font-size: 10px; }
 
 /* RENAME MODAL */
 .rename-overlay {
+  display: none;
   position: fixed; inset: 0; z-index: 200;
   background: rgba(0,0,0,0.7);
-  display: flex; align-items: flex-end; justify-content: center;
+  align-items: flex-end; justify-content: center;
 }
+.rename-overlay.open { display: flex; }
 .rename-dialog {
   width: 100%; max-width: 520px;
   background: var(--bg2); border: 1px solid var(--border);
