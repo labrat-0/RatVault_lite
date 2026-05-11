@@ -27,9 +27,18 @@
     </header>
 
     <nav class="tabs" id="tabs">
-      <button data-tab="vault" class="active">Vault</button>
-      <button data-tab="chat">Chat</button>
-      <button data-tab="settings">Settings</button>
+      <button data-tab="vault" class="active">
+        <span class="tab-icon">📁</span>
+        <span class="tab-label">Vault</span>
+      </button>
+      <button data-tab="chat">
+        <span class="tab-icon">💬</span>
+        <span class="tab-label">Chat</span>
+      </button>
+      <button data-tab="settings">
+        <span class="tab-icon">⚙</span>
+        <span class="tab-label">Settings</span>
+      </button>
     </nav>
 
     <!-- ONBOARDING -->
@@ -102,53 +111,59 @@
     <div class="view" id="v-settings">
       <div class="config-box">
 
-        <h3>Vault directory</h3>
-        <div class="vault-dir-row">
-          <span class="vault-dir-name" id="vault-dir-name">(none selected)</span>
-          <button class="btn sm" id="change-vault-dir">Change</button>
-          <button class="btn sm" id="import-dir-btn" style="display:none">Re-import</button>
-          <input type="file" id="dir-input-settings" webkitdirectory multiple style="display:none">
+        <div class="settings-card">
+          <h3>Vault directory</h3>
+          <div class="vault-dir-row">
+            <span class="vault-dir-name" id="vault-dir-name">(none selected)</span>
+            <button class="btn sm" id="change-vault-dir">Change</button>
+            <button class="btn sm" id="import-dir-btn" style="display:none">Re-import</button>
+            <input type="file" id="dir-input-settings" webkitdirectory multiple style="display:none">
+          </div>
+          <p style="font-size:10px;color:var(--dim);margin:0 0 4px;line-height:1.5;">
+            RatVault reads markdown files from this folder. To restore after reinstalling,
+            pick the same folder and your notes will load automatically.
+          </p>
         </div>
-        <p style="font-size:10px;color:var(--dim);margin:0 0 4px;line-height:1.5;">
-          RatVault reads markdown files from this folder. To restore after reinstalling,
-          pick the same folder and your notes will load automatically.
-        </p>
 
-        <h3>AI chat</h3>
-        <div class="field">
-          <label>Provider</label>
-          <select id="provider-select">
-            <option value="openrouter">OpenRouter</option>
-            <option value="openai">OpenAI</option>
-            <option value="anthropic">Anthropic (Claude)</option>
-            <option value="custom">Custom endpoint</option>
-          </select>
+        <div class="settings-card">
+          <h3>AI chat</h3>
+          <div class="field">
+            <label>Provider</label>
+            <select id="provider-select">
+              <option value="openrouter">OpenRouter</option>
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic (Claude)</option>
+              <option value="custom">Custom endpoint</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>API key</label>
+            <input type="password" id="api-key-input" placeholder="sk-…" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>Endpoint URL</label>
+            <input type="text" id="api-endpoint" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>Model</label>
+            <input type="text" id="model-input" autocomplete="off">
+          </div>
+          <p style="font-size:10px;color:var(--dim);margin:0 0 4px;line-height:1.5;">
+            API key stored locally only. Anthropic and OpenAI require direct API access (check CORS if self-hosting).
+          </p>
         </div>
-        <div class="field">
-          <label>API key</label>
-          <input type="password" id="api-key-input" placeholder="sk-…" autocomplete="off">
-        </div>
-        <div class="field">
-          <label>Endpoint URL</label>
-          <input type="text" id="api-endpoint" autocomplete="off">
-        </div>
-        <div class="field">
-          <label>Model</label>
-          <input type="text" id="model-input" autocomplete="off">
-        </div>
-        <p style="font-size:10px;color:var(--dim);margin:0 0 4px;line-height:1.5;">
-          API key stored locally only. Anthropic and OpenAI require direct API access (check CORS if self-hosting).
-        </p>
 
-        <h3>Theme</h3>
-        <div class="swatches">
-          <div class="swatch" data-t="green"  style="background:#00ff88"></div>
-          <div class="swatch" data-t="purple" style="background:#bf5af2"></div>
-          <div class="swatch" data-t="blue"   style="background:#5ac8fa"></div>
-          <div class="swatch" data-t="yellow" style="background:#ffd60a"></div>
-          <div class="swatch" data-t="red"    style="background:#ff453a"></div>
-          <div class="swatch" data-t="pink"   style="background:#ff375f"></div>
-          <div class="swatch" data-t="white"  style="background:#f5f5f7"></div>
+        <div class="settings-card">
+          <h3>Theme</h3>
+          <div class="swatches">
+            <div class="swatch" data-t="green"  style="background:#00ff88"></div>
+            <div class="swatch" data-t="purple" style="background:#bf5af2"></div>
+            <div class="swatch" data-t="blue"   style="background:#5ac8fa"></div>
+            <div class="swatch" data-t="yellow" style="background:#ffd60a"></div>
+            <div class="swatch" data-t="red"    style="background:#ff453a"></div>
+            <div class="swatch" data-t="pink"   style="background:#ff375f"></div>
+            <div class="swatch" data-t="white"  style="background:#f5f5f7"></div>
+          </div>
         </div>
 
         <div style="margin-top:16px;">
@@ -158,6 +173,7 @@
         <div style="margin-top:20px;font-size:10px;color:var(--dim);line-height:1.5;">
           RatVault PWA — no server, no telemetry, no remote code. All data on your device.
         </div>
+
       </div>
     </div>
 
