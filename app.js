@@ -675,8 +675,9 @@ async function loadVault() {
 
 // ─── Entry view ───────────────────────────────────────────────────────────────
 
-function openEntry(entry) {
+function openEntry(entry, pushHistory = true) {
   _currentEntry = entry;
+  if (pushHistory) history.pushState({ view: 'entry', filename: entry.filename }, '');
   switchView('v-entry');
   const body = $('entry-body');
   clearChildren(body);
@@ -965,6 +966,7 @@ async function doSendChat() {
 // ─── Tab routing ─────────────────────────────────────────────────────────────
 
 async function switchTab(name) {
+  history.replaceState({ view: name }, '');
   setActiveTab(name);
   if (name === 'vault') { switchView('v-vault'); await loadVault(); }
   else if (name === 'chat') switchView('v-chat');
@@ -998,6 +1000,7 @@ function enterApp() {
   setActiveTab('vault');
   document.querySelectorAll('.tabs button').forEach(b =>
     b.addEventListener('click', () => switchTab(b.dataset.tab)));
+  history.replaceState({ view: 'vault' }, '');
   switchView('v-vault');
   loadVault();
 }
@@ -1066,9 +1069,19 @@ async function init() {
   }
 
   // Entry back
-  $('entry-back').addEventListener('click', () => {
+  $('entry-back').addEventListener('click', () => history.back());
+
+  // Back gesture / hardware back — stay inside the PWA
+  window.addEventListener('popstate', async (e) => {
+    const state = e.state;
+    if (state?.view === 'entry') {
+      const entry = allEntries.find(en => en.filename === state.filename);
+      if (entry) { openEntry(entry, false); return; }
+    }
+    // Anything else (vault/chat/settings/null) → vault
     setActiveTab('vault');
     switchView('v-vault');
+    history.replaceState({ view: 'vault' }, '');
   });
 
   // Entry edit
