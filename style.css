@@ -375,3 +375,115 @@ button.btn.sm { padding: 4px 8px; font-size: 10px; }
   header.bar { padding: 8px 10px; }
   .onboard-wrap { padding: 30px 16px; }
 }
+
+/* ─── MOBILE PWA (≤ 768px) ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Base font */
+  html, body { font-size: 14px; }
+
+  /* ── Header ── */
+  header.bar { padding: 10px 14px; height: 52px; }
+  header.bar .version { display: none; }
+  .btn-icon {
+    background: transparent;
+    border: none;
+    color: var(--fg);
+    font-size: 20px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .btn-icon:hover { color: var(--accent); }
+
+  /* ── Bottom tab bar ── */
+  .app { padding-bottom: 60px; }
+  .tabs.visible {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    z-index: 100;
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tabs button {
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 0;
+    font-size: 9px;
+  }
+  .tab-icon { font-size: 20px; line-height: 1; }
+  .tab-label { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* ── Touch targets — global ── */
+  button.btn { min-height: 44px; padding: 10px 16px; font-size: 13px; }
+  button.btn.sm { min-height: 44px; padding: 8px 12px; font-size: 12px; }
+  .field input,
+  .field select,
+  .chat-input-row textarea { min-height: 44px; font-size: 14px; padding: 10px 12px; }
+
+  /* ── Vault toolbar — icon row ── */
+  .list-toolbar { flex-wrap: wrap; padding: 8px; gap: 6px; }
+  .list-toolbar input[type="search"] {
+    flex-basis: 100%;
+    order: -1;
+    font-size: 14px;
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+  .list-toolbar button.btn.sm {
+    flex: 1;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 16px;
+    padding: 0;
+  }
+
+  /* ── Capture row ── */
+  .capture-row.open { flex-wrap: wrap; }
+  .capture-row input[type="url"] {
+    flex-basis: 100%;
+    min-height: 44px;
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+  .capture-row select { min-height: 44px; font-size: 13px; flex: 1; }
+  .capture-row .btn { min-height: 44px; }
+
+  /* ── Chat ── */
+  .chat-msgs { padding: 12px 12px 16px; }
+  .chat-input-row {
+    padding: 10px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+  .chat-mode-bar { flex-shrink: 0; }
+  .mode-btn { padding: 10px 0; font-size: 11px; min-height: 44px; }
+
+  /* ── Settings cards ── */
+  .config-box { padding: 12px; overflow-y: auto; }
+  .settings-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .settings-card h3 { margin-top: 0; }
+  .config-box h3:not(:first-child) { margin-top: 0; }
+  .field { margin-bottom: 14px; }
+  .field label { font-size: 11px; }
+  .swatches { gap: 12px; }
+  .swatch { width: 36px; height: 36px; }
+
+  /* ── Entry detail ── */
+  .entry-body { padding: 14px 14px 24px; }
+
+  /* ── Onboarding ── */
+  .onboard-wrap { padding: 30px 20px; gap: 16px; }
+}
