@@ -1,0 +1,24 @@
+{
+  "name": "RatVault",
+  "short_name": "RatVault",
+  "description": "Personal knowledge vault — browse, search, and chat with your local markdown notes.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0d0a",
+  "theme_color": "#00ff88",
+  "icons": [
+    {
+      "src": "icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

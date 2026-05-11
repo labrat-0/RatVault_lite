@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="green">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Personal knowledge vault — browse, search, and chat with your local markdown notes.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src *; worker-src 'self'; font-src 'self';">
+  <meta name="theme-color" content="#00ff88">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>RatVault</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-128.png">
+  <link rel="apple-touch-icon" href="icons/icon-128.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+
+    <header class="bar">
+      <img src="icons/icon-48.png" alt="">
+      <div class="title">RatVault</div>
+      <div class="grow"></div>
+      <span class="version">PWA</span>
+    </header>
+
+    <nav class="tabs" id="tabs">
+      <button data-tab="vault" class="active">Vault</button>
+      <button data-tab="chat">Chat</button>
+      <button data-tab="settings">Settings</button>
+    </nav>
+
+    <!-- ONBOARDING -->
+    <div class="view active" id="v-onboard">
+      <div class="onboard-wrap">
+        <img src="icons/icon-128.png" alt="RatVault">
+        <h1>RatVault</h1>
+        <p>Your personal knowledge vault. All data stays on your device — no server, no cloud, no tracking.</p>
+        <button class="btn primary" id="pick-dir-btn">Pick vault directory</button>
+        <button class="btn primary" id="import-dir-btn-onboard" style="display:none">Import directory</button>
+        <input type="file" id="dir-input-onboard" webkitdirectory multiple style="display:none">
+        <div class="onboard-note" id="onboard-note">
+          RatVault reads and writes markdown files directly from a folder you choose.
+          If you reinstall the app, just pick the same folder and your notes will be right there.
+        </div>
+      </div>
+    </div>
+
+    <!-- VAULT LIST -->
+    <div class="view" id="v-vault">
+      <div class="list-toolbar">
+        <input type="search" id="vault-search" placeholder="Search notes…">
+        <button class="btn sm" id="vault-refresh" title="Refresh">↻</button>
+        <button class="btn sm" id="vault-new" title="New note">+ New</button>
+        <button class="btn sm" id="vault-upload" title="Upload files">↑</button>
+        <button class="btn sm" id="capture-toggle" title="Capture URL">🔗</button>
+        <input type="file" id="file-input" multiple style="display:none">
+      </div>
+      <div class="capture-row" id="capture-row">
+        <input type="url" id="capture-url" placeholder="Paste URL to capture…">
+        <select id="capture-kind">
+          <option value="">auto-detect</option>
+          <option value="link">link</option>
+          <option value="article">article</option>
+          <option value="research">research</option>
+          <option value="code">code</option>
+          <option value="video">video</option>
+          <option value="reference">reference</option>
+          <option value="discussion">discussion</option>
+          <option value="document">document</option>
+        </select>
+        <button class="btn sm primary" id="capture-submit">Save</button>
+      </div>
+      <div class="list-wrap" id="vault-list"></div>
+    </div>
+
+    <!-- ENTRY DETAIL -->
+    <div class="view" id="v-entry">
+      <div class="list-toolbar" style="padding:6px 10px;">
+        <button class="btn sm" id="entry-back">← Back</button>
+      </div>
+      <div class="entry-body" id="entry-body"></div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="view" id="v-chat">
+      <div class="chat-mode-bar">
+        <button class="mode-btn active" data-mode="ai" id="mode-ai">AI Chat</button>
+        <button class="mode-btn" data-mode="local" id="mode-local">Local Search</button>
+        <button class="btn sm" id="chat-clear" title="Clear chat" style="margin-left:auto;padding:4px 7px;">🗑</button>
+      </div>
+      <div class="chat-msgs" id="chat-msgs"></div>
+      <div class="chat-input-row">
+        <textarea id="chat-input" rows="1" placeholder="Ask your vault…"></textarea>
+        <button class="btn primary" id="chat-send">Send</button>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="view" id="v-settings">
+      <div class="config-box">
+
+        <h3>Vault directory</h3>
+        <div class="vault-dir-row">
+          <span class="vault-dir-name" id="vault-dir-name">(none selected)</span>
+          <button class="btn sm" id="change-vault-dir">Change</button>
+          <button class="btn sm" id="import-dir-btn" style="display:none">Re-import</button>
+          <input type="file" id="dir-input-settings" webkitdirectory multiple style="display:none">
+        </div>
+        <p style="font-size:10px;color:var(--dim);margin:0 0 4px;line-height:1.5;">
+          RatVault reads markdown files from this folder. To restore after reinstalling,
+          pick the same folder and your notes will load automatically.
+        </p>
+
+        <h3>AI chat</h3>
+        <div class="field">
+          <label>Provider</label>
+          <select id="provider-select">
+            <option value="openrouter">OpenRouter</option>
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic (Claude)</option>
+            <option value="custom">Custom endpoint</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>API key</label>
+          <input type="password" id="api-key-input" placeholder="sk-…" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Endpoint URL</label>
+          <input type="text" id="api-endpoint" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Model</label>
+          <input type="text" id="model-input" autocomplete="off">
+        </div>
+        <p style="font-size:10px;color:var(--dim);margin:0 0 4px;line-height:1.5;">
+          API key stored locally only. Anthropic and OpenAI require direct API access (check CORS if self-hosting).
+        </p>
+
+        <h3>Theme</h3>
+        <div class="swatches">
+          <div class="swatch" data-t="green"  style="background:#00ff88"></div>
+          <div class="swatch" data-t="purple" style="background:#bf5af2"></div>
+          <div class="swatch" data-t="blue"   style="background:#5ac8fa"></div>
+          <div class="swatch" data-t="yellow" style="background:#ffd60a"></div>
+          <div class="swatch" data-t="red"    style="background:#ff453a"></div>
+          <div class="swatch" data-t="pink"   style="background:#ff375f"></div>
+          <div class="swatch" data-t="white"  style="background:#f5f5f7"></div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button class="btn primary" id="save-settings" style="width:100%;">Save settings</button>
+        </div>
+
+        <div style="margin-top:20px;font-size:10px;color:var(--dim);line-height:1.5;">
+          RatVault PWA — no server, no telemetry, no remote code. All data on your device.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast-mini" id="toast"></div>
+
+  <script src="vendor/marked.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
