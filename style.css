@@ -369,6 +369,23 @@ button.btn.sm { padding: 4px 8px; font-size: 10px; }
 }
 .toast-mini.show { display: block; }
 
+/* Refresh button — header icon button (desktop + mobile) */
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  font-size: 20px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.btn-icon:hover { color: var(--accent); }
+
 /* RESPONSIVE */
 @media (max-width: 480px) {
   .app { max-width: 100%; }
@@ -385,34 +402,20 @@ button.btn.sm { padding: 4px 8px; font-size: 10px; }
   /* ── Header ── */
   header.bar { padding: 10px 14px; height: 52px; }
   header.bar .version { display: none; }
-  .btn-icon {
-    background: transparent;
-    border: none;
-    color: var(--fg);
-    font-size: 20px;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border-radius: 4px;
-    flex-shrink: 0;
-  }
-  .btn-icon:hover { color: var(--accent); }
 
   /* ── Bottom tab bar ── */
-  .app { padding-bottom: 60px; }
+  .app { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
   .tabs.visible {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 60px;
+    min-height: 60px;
     z-index: 100;
     border-top: 1px solid var(--border);
     border-bottom: none;
     padding-bottom: env(safe-area-inset-bottom);
   }
   .tabs button {
+    display: flex; align-items: center; justify-content: center;
     flex-direction: column;
     gap: 2px;
     padding: 6px 0;
