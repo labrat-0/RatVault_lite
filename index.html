@@ -188,6 +188,18 @@
 
   <div class="toast-mini" id="toast"></div>
 
+  <div class="rename-overlay" id="rename-overlay" style="display:none">
+    <div class="rename-dialog">
+      <div class="rename-filename" id="rename-filename"></div>
+      <label class="rename-label">Name in vault</label>
+      <input type="text" id="rename-input" class="rename-input" autocomplete="off">
+      <div class="rename-actions">
+        <button class="btn" id="rename-skip">Skip</button>
+        <button class="btn primary" id="rename-save">Save</button>
+      </div>
+    </div>
+  </div>
+
   <script src="vendor/marked.min.js"></script>
   <script src="app.js"></script>
 </body>

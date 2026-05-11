@@ -389,6 +389,30 @@ button.btn.sm { padding: 4px 8px; font-size: 10px; }
 .row { display: flex; gap: 8px; }
 .row > * { flex: 1; }
 
+/* RENAME MODAL */
+.rename-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.rename-dialog {
+  width: 100%; max-width: 520px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 10px;
+}
+.rename-filename { font-size: 10px; color: var(--dim); word-break: break-all; }
+.rename-label { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+.rename-input {
+  background: var(--bg); border: 1px solid var(--accent);
+  color: var(--fg); font-family: var(--mono); font-size: 14px;
+  padding: 10px 12px; border-radius: 4px; width: 100%;
+}
+.rename-input:focus { outline: none; }
+.rename-actions { display: flex; gap: 8px; }
+.rename-actions .btn { flex: 1; min-height: 44px; }
+
 /* TOAST */
 .toast-mini {
   position: fixed; bottom: 12px; left: 50%;

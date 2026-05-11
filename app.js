@@ -274,13 +274,13 @@ function detectKind(filename, mimeType) {
   return 'file';
 }
 
-async function writeFileToVault(file) {
+async function writeFileToVault(file, titleOverride) {
   const kind = detectKind(file.name, file.type);
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
   const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
   const titleBase = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
-  const title = titleBase || file.name;
+  const title = (titleOverride || titleBase || file.name).trim();
   const slug = slugify(title) || slugify(file.name) || 'untitled';
   const mdFilename = `${ts}-${slug}.md`;
 
@@ -551,6 +551,46 @@ function renderMarkdown(text) {
     }
   }
   return frag;
+}
+
+// ─── Rename prompt ────────────────────────────────────────────────────────────
+
+function promptTitle(filename, defaultTitle) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('rename-overlay');
+    const input   = document.getElementById('rename-input');
+    const fnEl    = document.getElementById('rename-filename');
+    fnEl.textContent = filename;
+    input.value = defaultTitle;
+    overlay.style.display = 'flex';
+    setTimeout(() => { input.focus(); input.select(); }, 60);
+
+    function finish(val) {
+      overlay.style.display = 'none';
+      off();
+      resolve(val || defaultTitle);
+    }
+
+    const saveBtn = document.getElementById('rename-save');
+    const skipBtn = document.getElementById('rename-skip');
+
+    function onSave() { finish(input.value.trim() || defaultTitle); }
+    function onSkip() { finish(defaultTitle); }
+    function onKey(e) {
+      if (e.key === 'Enter') { e.preventDefault(); onSave(); }
+      if (e.key === 'Escape') onSkip();
+    }
+
+    function off() {
+      saveBtn.removeEventListener('click', onSave);
+      skipBtn.removeEventListener('click', onSkip);
+      input.removeEventListener('keydown', onKey);
+    }
+
+    saveBtn.addEventListener('click', onSave);
+    skipBtn.addEventListener('click', onSkip);
+    input.addEventListener('keydown', onKey);
+  });
 }
 
 // ─── UI helpers ───────────────────────────────────────────────────────────────
@@ -1008,7 +1048,9 @@ async function init() {
     }
     for (const file of binFiles) {
       try {
-        await writeFileToVault(file);
+        const defaultTitle = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+        const title = await promptTitle(file.name, defaultTitle);
+        await writeFileToVault(file, title);
         count++;
       } catch (err) { toast('Upload failed: ' + err.message); }
     }
