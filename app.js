@@ -662,6 +662,7 @@ async function loadVault() {
 // ─── Entry view ───────────────────────────────────────────────────────────────
 
 function openEntry(entry) {
+  _currentEntry = entry;
   switchView('v-entry');
   const body = $('entry-body');
   clearChildren(body);
@@ -723,11 +724,9 @@ async function renderBinaryPreview(container, entry, kind, sourceFile) {
     img.alt = entry.title;
     container.appendChild(img);
   } else if (kind === 'pdf') {
-    const embed = document.createElement('embed');
-    embed.src = objectUrl;
-    embed.type = 'application/pdf';
-    embed.className = 'preview-pdf';
-    container.appendChild(embed);
+    const btn = el('button', 'btn primary preview-pdf-btn', 'Open PDF ↗');
+    btn.addEventListener('click', () => window.open(objectUrl, '_blank'));
+    container.appendChild(btn);
   } else if (kind === 'video') {
     const video = document.createElement('video');
     video.src = objectUrl;
@@ -753,6 +752,40 @@ async function renderBinaryPreview(container, entry, kind, sourceFile) {
   }
 }
 
+// ─── Entry editor ─────────────────────────────────────────────────────────────
+
+let _editEntry = null;
+let _currentEntry = null;
+
+function openEditor(entry) {
+  _editEntry = entry;
+  $('edit-title').value = entry.title || '';
+  $('edit-tags').value = (entry.tags || []).join(', ');
+  $('edit-body').value = entry.body || '';
+  $('edit-overlay').classList.add('open');
+  setTimeout(() => { $('edit-title').focus(); $('edit-title').select(); }, 60);
+}
+
+async function saveEditorEntry() {
+  if (!_editEntry) return;
+  const title = $('edit-title').value.trim() || _editEntry.title;
+  const tags  = $('edit-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+  const body  = $('edit-body').value;
+  const meta  = { ..._editEntry.meta, title, tags, slug: slugify(title) };
+  if (!meta.created) meta.created = new Date().toISOString();
+  try {
+    await writeEntry(_editEntry.filename, meta, body);
+    $('edit-overlay').classList.remove('open');
+    const updated = { ..._editEntry, title, tags, body, meta };
+    const idx = allEntries.findIndex(e => e.filename === _editEntry.filename);
+    if (idx >= 0) allEntries[idx] = updated; else allEntries.push(updated);
+    buildIndex(allEntries);
+    openEntry(updated);
+    toast('Saved');
+    _editEntry = null;
+  } catch (e) { toast('Save failed: ' + e.message); }
+}
+
 // ─── Settings view ────────────────────────────────────────────────────────────
 
 async function loadSettings() {
@@ -768,13 +801,13 @@ async function loadSettings() {
 
   if (HAS_FS_API) {
     $('vault-dir-name').textContent = dirHandle ? dirHandle.name : '(none selected)';
-    $('change-vault-dir').style.display = '';
-    $('import-dir-btn').style.display = 'none';
+    $('change-vault-dir').classList.remove('hidden');
+    $('import-dir-btn').classList.add('hidden');
   } else {
     const count = allEntries.length;
     $('vault-dir-name').textContent = count ? `${count} notes in browser storage` : '(no notes imported)';
-    $('change-vault-dir').style.display = 'none';
-    $('import-dir-btn').style.display = '';
+    $('change-vault-dir').classList.add('hidden');
+    $('import-dir-btn').classList.remove('hidden');
   }
 }
 
@@ -972,11 +1005,11 @@ async function runOnboarding() {
       }
       enterApp();
     });
-    $('import-dir-btn-onboard').style.display = 'none';
+    $('import-dir-btn-onboard').classList.add('hidden');
   } else {
     // IDB mode — webkitdirectory input
-    $('pick-dir-btn').style.display = 'none';
-    $('import-dir-btn-onboard').style.display = '';
+    $('pick-dir-btn').classList.add('hidden');
+    $('import-dir-btn-onboard').classList.remove('hidden');
     $('import-dir-btn-onboard').addEventListener('click', () => $('dir-input-onboard').click());
     $('dir-input-onboard').addEventListener('change', async e => {
       const files = Array.from(e.target.files);
@@ -1009,6 +1042,21 @@ async function init() {
     switchView('v-vault');
   });
 
+  // Entry edit
+  $('entry-edit').addEventListener('click', () => {
+    if (_currentEntry) openEditor(_currentEntry);
+  });
+
+  // Editor save/cancel
+  $('edit-save-btn').addEventListener('click', saveEditorEntry);
+  $('edit-cancel').addEventListener('click', () => {
+    $('edit-overlay').classList.remove('open');
+    _editEntry = null;
+  });
+  $('edit-overlay').addEventListener('keydown', e => {
+    if (e.key === 'Escape') { $('edit-overlay').classList.remove('open'); _editEntry = null; }
+  });
+
   // Vault toolbar
   $('vault-search').addEventListener('input', () => renderList(search($('vault-search').value)));
   $('vault-refresh').addEventListener('click', loadVault);
@@ -1016,9 +1064,10 @@ async function init() {
     const title = prompt('Entry title:');
     if (!title?.trim()) return;
     try {
-      await createEntry(title.trim());
+      const filename = await createEntry(title.trim());
       await loadVault();
-      toast('Created' + (HAS_FS_API ? '' : ' (downloading file)'));
+      const entry = allEntries.find(e => e.filename === filename);
+      if (entry) { switchView('v-entry'); openEntry(entry); openEditor(entry); }
     } catch (e) { toast('Error: ' + e.message); }
   });
 

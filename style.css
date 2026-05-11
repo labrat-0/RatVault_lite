@@ -206,6 +206,12 @@ header.bar .version { font-size: 9px; color: var(--dim); }
 .mode-btn:hover { color: var(--fg); }
 
 /* ENTRY DETAIL */
+.entry-toolbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
 .entry-body { padding: 14px 16px; overflow-y: auto; flex: 1; }
 .entry-title {
   font-size: 15px; font-weight: 700; color: var(--accent);
@@ -247,9 +253,57 @@ header.bar .version { font-size: 9px; color: var(--dim); }
 .md-body strong { color: var(--fg); }
 .md-body em { color: var(--dim); font-style: italic; }
 
+/* ENTRY EDITOR OVERLAY */
+.edit-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.7);
+  align-items: flex-end; justify-content: center;
+}
+.edit-overlay.open { display: flex; }
+.edit-sheet {
+  width: 100%; max-width: 600px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+  display: flex; flex-direction: column;
+  max-height: 90vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.edit-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.edit-heading {
+  flex: 1; text-align: center; font-size: 11px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim);
+}
+.edit-fields {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 14px; overflow-y: auto; flex: 1;
+}
+.edit-label {
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--dim); margin-top: 4px;
+}
+.edit-hint-small { font-size: 9px; color: var(--dim2); text-transform: none; letter-spacing: 0; }
+.edit-input {
+  background: var(--bg); border: 1px solid var(--dim2);
+  color: var(--fg); font-family: var(--mono); font-size: 13px;
+  padding: 9px 10px; border-radius: 4px; width: 100%; min-height: 44px;
+}
+.edit-input:focus { outline: none; border-color: var(--accent); }
+.edit-textarea {
+  background: var(--bg); border: 1px solid var(--dim2);
+  color: var(--fg); font-family: var(--mono); font-size: 12px;
+  padding: 9px 10px; border-radius: 4px; width: 100%;
+  min-height: 200px; resize: vertical; line-height: 1.6;
+}
+.edit-textarea:focus { outline: none; border-color: var(--accent); }
+
 /* BINARY PREVIEWS */
 .preview-img { max-width: 100%; height: auto; border-radius: 4px; display: block; margin: 0 auto 12px; }
-.preview-pdf { width: 100%; height: 70vh; border: none; border-radius: 4px; display: block; }
+.preview-pdf-btn { width: 100%; margin-bottom: 12px; }
 .preview-video { max-width: 100%; border-radius: 4px; display: block; margin: 0 auto; }
 .preview-audio { width: 100%; margin-bottom: 12px; }
 .preview-missing { padding: 24px; text-align: center; color: var(--dim); font-size: 11px; }
@@ -328,8 +382,17 @@ header.bar .version { font-size: 9px; color: var(--dim); }
 }
 .chat-input-row textarea:focus { outline: none; border-color: var(--accent); }
 
+/* UTILITY */
+.hidden { display: none !important; }
+.grow { flex: 1; }
+
 /* SETTINGS */
 .config-box { padding: 14px 16px; overflow-y: auto; }
+.settings-hint { font-size: 10px; color: var(--dim); margin: 0 0 4px; line-height: 1.5; }
+.settings-save-row { margin-top: 16px; }
+.settings-save-btn { width: 100%; }
+.settings-footer { margin-top: 20px; font-size: 10px; color: var(--dim); line-height: 1.5; }
+.chat-clear-btn { margin-left: auto; padding: 4px 7px !important; min-height: unset !important; }
 .config-box h3 {
   font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
   color: var(--accent); margin: 0 0 10px;
