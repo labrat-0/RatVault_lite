@@ -1,6 +1,6 @@
 {
-  "name": "RatVault",
-  "short_name": "RatVault",
+  "name": "RatVault Lite",
+  "short_name": "RatVault Lite",
   "description": "Personal knowledge vault — browse, search, and chat with your local markdown notes.",
   "start_url": "./",
   "scope": "./",

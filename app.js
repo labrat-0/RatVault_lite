@@ -1013,7 +1013,7 @@ async function runOnboarding() {
   if (!HAS_FS_API) {
     note.textContent =
       'Your browser does not support the File System Access API. ' +
-      'RatVault will import your notes and store them in browser storage. ' +
+      'RatVault Lite will import your notes and store them in browser storage. ' +
       'To restore after reinstalling, re-import the same folder. ' +
       'Chrome/Edge offer full persistent access.';
   }
