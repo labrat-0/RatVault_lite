@@ -21,6 +21,20 @@ No server. No cloud. No tracking. Everything stays on your device.
 
 ---
 
+<div align="center">
+
+<img src="screenshots/01-vault.jpg" alt="Vault — note list and search" width="30%">
+&nbsp;
+<img src="screenshots/02-chat.jpg" alt="AI chat with your notes" width="30%">
+&nbsp;
+<img src="screenshots/03-settings.jpg" alt="Settings — provider, API key, themes" width="30%">
+
+<sub>Vault · AI chat · Settings</sub>
+
+</div>
+
+---
+
 ## Why RatVault Lite
 
 A markdown notes app that runs entirely in your browser. It reads and writes **real `.md` files on your disk** — no proprietary format, no lock-in, no account. Add an API key and you can chat with your notes; skip it and keyword search still works offline.
