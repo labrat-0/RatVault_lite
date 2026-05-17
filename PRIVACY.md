@@ -1,58 +1,52 @@
 # RatVault Lite — Privacy Policy
 
-_Last updated: 2026-05-05_
+_Last updated: 2026-05-16_
 
-RatVault Lite is a thin-client browser extension that connects to a **RatVault server you run on your own computer**. It is designed for privacy by construction.
+RatVault Lite is a **local-first Progressive Web App** for browsing, searching, and chatting with your own markdown notes. It is designed for privacy by construction: there is no backend, no account, and no developer-side infrastructure.
 
 ## What we collect
 
-**Nothing.** RatVault Lite has no analytics, no telemetry, no crash reporting, and no developer-side servers. The author cannot see what you do with the extension.
+**Nothing.** RatVault Lite has no analytics, no telemetry, no crash reporting, and no developer-side servers. The author cannot see what you do with the app, what notes you keep, or that you use it at all.
 
-## What is stored locally
+## Where your data lives
 
-The extension stores the following in `chrome.storage.local` on your device only:
+| Data | Location |
+|---|---|
+| Your markdown notes | Real `.md` files on your own disk (Chrome/Edge, via the File System Access API) **or** in your browser's IndexedDB (Firefox/Safari fallback) |
+| Your API key | Your browser's IndexedDB, on this device only |
+| Settings (provider, theme, preferences) | Your browser's IndexedDB / localStorage, on this device only |
+| App assets (HTML, JS, CSS, icons) | Cached by the service worker for offline use |
 
-- `serverUrl` — the URL of your local RatVault server (default: `http://localhost:8055`).
-- `theme` — your selected accent color.
-- `defaultSurface` — popup vs side panel preference.
-
-This data never leaves your machine.
+None of this data is transmitted to the author or to any third party by the app itself.
 
 ## Where data is sent
 
-When you use the extension, it sends data **only** to the server URL you configure. The default and only host permissions in the manifest are:
+RatVault Lite makes network requests in only two situations:
 
-- `http://localhost:8055/*`
-- `http://127.0.0.1:8055/*`
+1. **Loading the app** — your browser downloads the static app files from the host serving it (e.g. `vault.ratlabs.tech`). After the first visit the service worker serves these from cache; the app then works fully offline.
+2. **AI chat** — when *you* send a chat message, the relevant notes and your prompt are sent **directly from your browser to the AI provider you chose and configured** (OpenRouter, OpenAI, Anthropic, or a custom endpoint). Your API key authenticates that request.
 
-If you change the server URL to something else, you would also need to grant additional host permissions; the extension cannot silently expand its network reach.
+If you never enter an API key and never use AI chat, RatVault Lite makes **no outbound requests at all** beyond loading the app.
 
-The following user actions trigger HTTP requests to your local server:
+## Third-party AI providers
 
-| Action | Endpoint |
-|---|---|
-| Health check | `GET /health` |
-| Open the Vault tab | `GET /api/entries` |
-| Send a chat message | `POST /api/chat` |
-| Click "Reindex" | `POST /api/reindex` |
-| Right-click → Save selection / image / page | `POST /api/inbox/upload` |
+When you use AI chat, your prompt and note content are processed by the provider you selected. Their handling of that data is governed by **their** privacy policy and terms — review them before sending sensitive notes:
 
-No request is made to any third party.
+- OpenRouter — https://openrouter.ai/privacy
+- OpenAI — https://openai.com/policies/privacy-policy
+- Anthropic — https://www.anthropic.com/legal/privacy
 
-## Permissions justification
+RatVault Lite does not proxy, log, or retain any of this traffic — it goes straight from your browser to the provider.
 
-| Permission | Reason |
-|---|---|
-| `storage` | Save server URL and theme on your device. |
-| `contextMenus` | Provide right-click "Save to RatVault" entries. |
-| `sidePanel` | Optional side-panel UI for the same features as the popup. |
-| `notifications` | Confirm save success or surface failures from the local server. |
-| `activeTab` + `scripting` | Read the current page's selection / text only when you click a context-menu item. The extension never auto-injects content scripts. |
-| Host permission `localhost:8055` / `127.0.0.1:8055` | The user's own RatVault server is the sole network destination. |
+## Your control
+
+- Delete your API key any time in **Settings** — it is removed from IndexedDB.
+- Clear all local app data via your browser's site-data controls.
+- Your `.md` files are plain text on your own disk; the app never deletes them without your action.
 
 ## Remote code
 
-The extension contains no remote code. All scripts are bundled inside the extension package, and the manifest's Content Security Policy blocks loading any script that isn't part of the extension.
+The app loads no remote code. All scripts are bundled and served as static files, and a strict Content Security Policy blocks loading any script from another origin.
 
 ## Contact
 

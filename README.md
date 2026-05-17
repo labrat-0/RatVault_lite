@@ -1,16 +1,41 @@
+<div align="center">
+
+<img src="icons/logo-256.png" alt="RatVault Lite logo" width="128" height="128">
+
 # RatVault Lite
 
-Personal knowledge vault — browse, search, and chat with your local markdown notes. No server, no cloud, no tracking. All data stays on your device.
+**Your personal knowledge vault — browse, search, and chat with your local markdown notes.**
+
+No server. No cloud. No tracking. Everything stays on your device.
+
+[![PWA](https://img.shields.io/badge/PWA-installable-00ff88?style=flat-square&logo=pwa&logoColor=black)](https://vault.ratlabs.tech)
+[![License](https://img.shields.io/badge/license-MIT-00ff88?style=flat-square)](#license)
+[![No Build](https://img.shields.io/badge/build-none%20required-00ff88?style=flat-square)](#self-hosting--running-locally)
+[![Offline](https://img.shields.io/badge/offline-ready-00ff88?style=flat-square)](#features)
+[![Local First](https://img.shields.io/badge/data-100%25%20local-00ff88?style=flat-square)](#privacy)
+[![Vanilla JS](https://img.shields.io/badge/vanilla-JS-f7df1e?style=flat-square&logo=javascript&logoColor=black)](#)
+
+[**Live App →**](https://vault.ratlabs.tech) · [Install](#install-as-pwa) · [Privacy](#privacy)
+
+</div>
+
+---
+
+## Why RatVault Lite
+
+A markdown notes app that runs entirely in your browser. It reads and writes **real `.md` files on your disk** — no proprietary format, no lock-in, no account. Add an API key and you can chat with your notes; skip it and keyword search still works offline.
 
 ## Features
 
-- Markdown vault with full-text search
-- AI chat with your notes (OpenRouter, OpenAI, Anthropic, or custom endpoint)
-- Local keyword search (no API needed)
-- URL capture — save links as markdown with auto-tagging
-- Offline support via service worker
-- File System Access API (Chrome/Edge) — reads and writes real `.md` files on disk
-- IndexedDB fallback (Firefox/Safari) — import files and store in browser storage
+| | |
+|---|---|
+| 📂 **Real files** | Reads/writes actual `.md` files via the File System Access API |
+| 🔍 **Full-text search** | Local keyword search — no API key needed |
+| 🤖 **AI chat** | Ask your notes questions (OpenRouter, OpenAI, Anthropic, or custom endpoint) |
+| 🔗 **URL capture** | Save links as markdown with auto-tagging |
+| 📴 **Offline** | Service worker caches the whole app — works with no connection |
+| 🧩 **PWA** | Installs to your home screen on Android & iOS |
+| 🦊 **Fallback mode** | IndexedDB storage for Firefox/Safari where disk access isn't available |
 
 ## Install as PWA
 
@@ -44,7 +69,7 @@ python -m http.server 8080
 # then open http://localhost:8080
 ```
 
-Or open `index.html` directly in Chrome/Edge (file:// — FS API and service worker won't work, but basic vault browsing does).
+Or open `index.html` directly in Chrome/Edge (`file://` — FS API and service worker won't work, but basic vault browsing does).
 
 ## API Key Setup
 
@@ -55,12 +80,18 @@ Or open `index.html` directly in Chrome/Edge (file:// — FS API and service wor
 ## Browser Compatibility
 
 | Feature | Chrome / Edge | Firefox | Safari (desktop) | iOS Safari |
-|---|---|---|---|---|
-| File System Access (read/write disk files) | Yes | No | No | No |
-| IndexedDB fallback (import files) | Yes | Yes | Yes | Yes |
-| PWA install | Yes | No | No | Yes |
-| Offline support | Yes | Yes | Yes | Yes |
+|---|:---:|:---:|:---:|:---:|
+| File System Access (read/write disk files) | ✅ | ❌ | ❌ | ❌ |
+| IndexedDB fallback (import files) | ✅ | ✅ | ✅ | ✅ |
+| PWA install | ✅ | ❌ | ❌ | ✅ |
+| Offline support | ✅ | ✅ | ✅ | ✅ |
 
 ## Privacy
 
-See [PRIVACY.md](PRIVACY.md).
+RatVault Lite has **no analytics, no telemetry, and no developer-side servers**. Your notes and API key never leave your device, except for the requests *you* trigger to the AI endpoint you configure.
+
+See [PRIVACY.md](PRIVACY.md) for full details.
+
+## License
+
+MIT

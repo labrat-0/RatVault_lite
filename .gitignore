@@ -1,0 +1,8 @@
+dist/
+*.zip
+.DS_Store
+node_modules/
+.web-ext-artifacts/
+
+docs/
+store/
